@@ -1,0 +1,126 @@
+0001   0000             ;########################################################
+0002   0000             ;# Programa que ordena una lista ASCENDENTEMENTE de 	#
+0003   0000             ;# numeros  binarios de 8 bits con signo, la longitud 	#
+0004   0000             ;# de la lista esta en la localidad 1B00h, y la misma 	#
+0005   0000             ;# lista comienza en la localidad 1B01h.		#
+0006   0000             ;# los numeros estan representados como complemento A2.	#
+0007   0000             ;########################################################
+0008   0000             
+0009   0000             	DIRECCION .equ 1B01h
+0010   0000             	LONGITUD  .equ 1B00h
+0011   0000             	
+0012   0000 31 FF 67    		LD    SP,67FFh		;se inicializa el Stack Pointer
+0013   0003             		
+0014   0003             ;====================================================================================================================
+0015   0003             ;========================ALGORITMO DE ORDENACION POR BURBUJA=========================================================
+0016   0003             ;====================================================================================================================
+0017   0003 DD 21 01 1B BURBUJA:	LD    IX,DIRECCION	;Se carga la direccion del primer elemento de la tabla en IX
+0018   0007 FD 21 02 1B 		LD    IY,DIRECCION+1	;Se carga la direccion del segundo elemento de la tabla en IX
+0019   000B 21 00 1B    		LD    HL,LONGITUD	;se carga la direccion del tamaño de la tabla en HL
+0020   000E 46          		LD    B,(HL)		;se carba B con el tamaño de la tabla
+0021   000F 05          		DEC   B			;decrementamos B, para recorrer N-1 elementos
+0022   0010 CB 81       		RES   0,C		;limpiamos la bandera que indica si hubo cambio
+0023   0012 CD 33 00    CICLO:		CALL  CP_S8		;llamamos a la subrutina que compara 2 numeros de 8 bits con signo
+0024   0015 38 0C       		JR    C,CAMBIO		;si hay acarreo ( (IY) < (IX) ), intercambiamos los valores
+0025   0017 DD 23       CONTINUA:	INC   IX		;se incremente el apuntador IX
+0026   0019 FD 23       		INC   IY		;se incrementa el apuntador IY
+0027   001B 10 F5       		DJNZ  CICLO		;si no se ha recorrido toda la lista salta a ciclo
+0028   001D CB 41       		BIT   0,C		;checamos la bandera de cambio
+0029   001F C2 03 00    		JP    NZ,BURBUJA	;si hubo cambio, repetimos el proceso
+0030   0022 76          		HALT			;si no hubo cambio, termino la ordenacion
+0031   0023             					;se detiene el programa		
+0032   0023 DD 7E 00    CAMBIO:		LD    A,(IX+0)		;se carga A con el dato de IX
+0033   0026 FD 5E 00    		LD    E,(IY+0)		;se carga E con el dato de IX
+0034   0029 DD 73 00    		LD    (IX+0),E		;se intercambia A por E
+0035   002C FD 77 00    		LD    (IY+0),A		;se intercambia E por A
+0036   002F CB C1       		SET   0,C		;ponemos la bandera de cambio a 1
+0037   0031 18 E4       		JR    CONTINUA		;continuamos con el algoritmo.
+0038   0033             ;====================================================================================================================
+0039   0033             
+0040   0033             ;====================================================================
+0041   0033             ;=============COMPARA 2 NNUMEROS DE 8 BITS CON SIGNO=================
+0042   0033             ;====================================================================
+0043   0033             ;Subrutina que compara 2 numeros de 8 bits con signo.
+0044   0033             ;Las direcciones de los numeros estan contenidas en
+0045   0033             ;los registros indice IX e IY.
+0046   0033             ;Al regresar de la subrutina:
+0047   0033             ;C=1 si  (IY) < (IX)
+0048   0033             ;Z=1 si  (IY) = (IX)
+0049   0033             
+0050   0033 DD 7E 00    CP_S8:	LD	A,(IX+0)	;cargamos en A el primer dato
+0051   0036 E6 80       	AND	80H		;sacamos el bit del signo
+0052   0038 5F          	LD	E,A		;cargamos el dato en E
+0053   0039 FD 7E 00    	LD	A,(IY+0)	;cargamos en A el segundo dato
+0054   003C E6 80       	AND	80H		;sacamos el bit del signo
+0055   003E A3          	AND	E		;se hace una operacion AND con los signos
+0056   003F 20 0F       	JR	NZ,NEGA		;si no es cero, los dos numeros son negativos
+0057   0041 FD 7E 00    	LD	A,(IY+0)	;cargamos en A el segundo dato
+0058   0044 E6 80       	AND	80H		;sacamos su bit de signo
+0059   0046 B3          	OR	E		;se hace una operacion OR con los signos
+0060   0047 28 14       	JR	Z,POSI		;si los dos signos son cero, los numero son positivos
+0061   0049 F6 FF       	OR	0FFH		;se pone la bandera Z a 0, indica que no son inguales
+0062   004B FD 7E 00    	LD	A,(IY+0)	;cargamos el segundo dato en A
+0063   004E 17          	RLA			;guardamos el bit del signo en el acarreo
+0064   004F C9          	RET			;regresamos de la subrutina, si C=1, quiere decir
+0065   0050             				;que el dato contenido en IY es negativo por lo
+0066   0050             				;tanto es el menor, si no, C=0 y es mayor
+0067   0050 FD 7E 00    NEGA:	LD	A,(IY+0)	;cargamos el segundo dato en A
+0068   0053 ED 44       	NEG			;se saca sucomplemento A2
+0069   0055 5F          	LD	E,A		;se guarda en E
+0070   0056 DD 7E 00    	LD	A,(IX+0)	;se carga el primer dato en A
+0071   0059 ED 44       	NEG			;se saca su complemento A2
+0072   005B BB          	CP	E		;comparamos los dos numeros
+0073   005C C9          	RET			;regresamos de la subrutina, Z=1 -> (IX)=(IY)
+0074   005D             				;C=1 -> (IX) > (IY)
+0075   005D DD 7E 00    POSI:	LD	A,(IX+0)	;cargamos el primer dato en A
+0076   0060 5F          	LD	E,A		;se guarda en E
+0077   0061 FD 7E 00    	LD	A,(IY+0)	;se carga el segundo dato en A
+0078   0064 BB          	CP	E		;comparamos los dos numeros
+0079   0065 C9          	RET			;regresamos de la subrutina, Z=1 -> (IX)=(IY)
+0080   0066             				;C=1 -> (IX) > (IY)
+0081   0066             	
+0082   0066             ;====================================================================	
+0083   0066             	
+0084   0066             
+0085   0066             		ORG  1B00H
+0086   1B00 24          		DEFB  024h	;NUMERO DE ELEMENTOS
+0087   1B01             		
+0088   1B01 15          		DEFB  15H	;ELEMENTOS DE LA TABLA;		
+0089   1B02 02          		DEFB  02H		
+0090   1B03 12          		DEFB  12H
+0091   1B04 04          		DEFB  04H
+0092   1B05 14          		DEFB  14H
+0093   1B06 1A          		DEFB  1AH
+0094   1B07 07          		DEFB  07H		
+0095   1B08 F8          		DEFB  0F8H		
+0096   1B09 0B          		DEFB  0BH
+0097   1B0A 10          		DEFB  10H
+0098   1B0B 0D          		DEFB  0DH
+0099   1B0C 17          		DEFB  17H
+0100   1B0D 0F          		DEFB  0FH
+0101   1B0E 19          		DEFB  19H
+0102   1B0F 11          		DEFB  11H
+0103   1B10 0A          		DEFB  0AH
+0104   1B11 13          		DEFB  13H		
+0105   1B12 0C          		DEFB  0CH
+0106   1B13 16          		DEFB  16H
+0107   1B14 08          		DEFB  08H
+0108   1B15 18          		DEFB  18H
+0109   1B16 05          		DEFB  05H
+0110   1B17 09          		DEFB  09H
+0111   1B18 F5          		DEFB  0F5H
+0112   1B19 80          		DEFB  80H
+0113   1B1A 03          		DEFB  03H
+0114   1B1B F2          		DEFB  0F2H
+0115   1B1C 0E          		DEFB  0EH
+0116   1B1D F9          		DEFB  0F9H
+0117   1B1E FA          		DEFB  0FAH
+0118   1B1F FC          		DEFB  0FCH
+0119   1B20 A5          		DEFB  0A5H
+0120   1B21 01          		DEFB  01H
+0121   1B22 A9          		DEFB  0A9H
+0122   1B23 06          		DEFB  06H
+0123   1B24 AA          		DEFB  0AAH
+0124   1B25             		
+0125   1B25             		
+Number of errors = 0

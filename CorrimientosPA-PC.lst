@@ -1,0 +1,21 @@
+0001   0000             
+0002   0000 CD 04 00    	CALL DELAY
+0003   0003 76          	HALT
+0004   0004             
+0005   0004 D9          DELAY: 	EXX
+0006   0005 08          	EX  AF,AF'
+0007   0006 16 08       	LD  D,8H
+0008   0008 01 AF 28    CICLO:	LD  BC,028AFh
+0009   000B 0B          CICLO2:	DEC BC
+0010   000C 79          	LD  A,C
+0011   000D B0          	OR  B
+0012   000E C2 0B 00    	JP  NZ,CICLO2
+0013   0011 15          	DEC D
+0014   0012 C2 08 00    	JP  NZ,CICLO
+0015   0015 08          	EX  AF,AF'
+0016   0016 D9          	EXX
+0017   0017 C9          	RET
+0018   0018             	
+0019   0018             	
+0020   0018             	
+Number of errors = 0

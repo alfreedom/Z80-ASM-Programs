@@ -1,0 +1,40 @@
+0001   0000              
+0002   0000             
+0003   0000 31 FF 67    	LD   SP,67FFh
+0004   0003 16 0A       	LD   D,0Ah
+0005   0005 1E 05       	LD   E,05H
+0006   0007 CD 0B 00    	CALL DIVIDE
+0007   000A 76          	HALT
+0008   000B             ;Esta subrutina divide dos números enteros de 8-bits 
+0009   000B             ; Entrada: Dividendo en D y divisor en E 
+0010   000B             ; Salida: Cociente en L y residuo en C 
+0011   000B             ; Registros modificados: B,C, y L 
+0012   000B             ; Llama a subrutinas DIV8 y RESULT 
+0013   000B             	
+0014   000B 06 08       DIVIDE:	LD   B,08h	; Contador de rotaciones 
+0015   000D 2E 00       	LD   L,0	; L tendrá el cociente 
+0016   000F 4D          	LD   C,L	; C tendrá el residuo parcial 
+0017   0010             	
+0018   0010             NEXTBIT: 
+0019   0010 CD 1B 00    	CALL    DIV8	; Divide dos números de 8 bits 
+0020   0013 CD 23 00    	CALL	RESULT	; Almacena los resultados 
+0021   0016 05          	DEC	B
+0022   0017 C2 10 00    	JP	NZ,NEXTBIT	; Decrementa el contador de rotaciones 
+0023   001A C9          	RET		; FIN
+0024   001B             	
+0025   001B 7A          DIV8:	LD	A,D	; Guarda el dividendo
+0026   001C 07          	RLCA		; Envía el bit al carry 
+0027   001D 57          	LD	D,A	; Guarda el resto del dividendo 
+0028   001E 17          	RLA		; Combine el bit CY con el residuo 
+0029   001F BB          	CP	E	;  Checa si el divisor > dividendo parcial 
+0030   0020 D8          	RET	C	;  Si CY=1, divisor > dividendo parcial 
+0031   0021 05          	DEC	B	;  Resta el divisor del dividendo parcial 
+0032   0022 C9          	RET		;  Termina 
+0033   0023             
+0034   0023 4F          RESULT:	LD	C,A	; Guarda residuo parcial 
+0035   0024 3F          	CCF		; Pone CY=1 o 0 según sea el cociente 
+0036   0025 7D          	LD	A,L	; Obtiene el cociente previo 
+0037   0026 17          	RLA		; Suma el cociente de la bandera CY 
+0038   0027 6F          	LD	L,A	; Guarda el cociente parcial 
+0039   0028 C9          	RET 
+Number of errors = 0

@@ -1,0 +1,119 @@
+0001   0000             ;Rutinas de operaciones basicas con numeros de 16,24 y 32 bits.
+0002   0000             VAR1	.EQU	090h
+0003   0000             VAR2	.equ	094h
+0004   0000             	
+0005   0000 21 90 00    Inicio:	LD	HL,VAR1	;Cargamos la direcion del primer numero en HL
+0006   0003             	;LD	DE,VAR2	;Cargamos la direcion del segundo numero en DE
+0007   0003 CD 0A 00    	CALL	CPL16 ;Hacemos la resta (VAR1)=(DE)-(HL)
+0008   0006 76          	HALT
+0009   0007 C3 6A 00    	JP	FIN
+0010   000A             
+0011   000A             
+0012   000A             ;/////////////////////////////////////////////////////////////
+0013   000A             ;Rutinas para complementar numeros de 16,24 y 32 bits
+0014   000A             ;La direccion del dato a complementar se debe guardar en HL
+0015   000A             ;
+0016   000A             ;
+0017   000A             ;
+0018   000A             ;Ejemplo
+0019   000A             ;	LD 	HL,VAR1	;Cargamos el apuntador a la variable en HL
+0020   000A             ;	CALL	CPL16	;Complementamos el contenido de la variable
+0021   000A             ;			;(VAR1)= !(VAR1)
+0022   000A             	
+0023   000A 06 02       CPL16:	LD	B,2
+0024   000C C3 19 00    	JP	CPL_
+0025   000F 06 03       CPL24:	LD	B,3
+0026   0011 C3 19 00    	JP	CPL_
+0027   0014 06 04       CPL32:	LD	B,4
+0028   0016 C3 19 00    	JP	CPL_
+0029   0019 7E          CPL_	LD	A,(HL)
+0030   001A 2F          	CPL		
+0031   001B 77          	LD	(HL),A
+0032   001C 23          	INC	HL
+0033   001D 10 FA       	DJNZ	CPL_
+0034   001F C9          	RET
+0035   0020             ;/////////////////////////////////////////////////////////////
+0036   0020             
+0037   0020             ;/////////////////////////////////////////////////////////////	
+0038   0020             ;Rutinas para incrementar numeros de 16,24 y 32 bits
+0039   0020             ;La direccion del dato a incrementar se debe guardar en HL
+0040   0020             ;
+0041   0020             ;
+0042   0020             ;
+0043   0020             ;Ejemplo
+0044   0020             ;	LD 	HL,VAR1	;Cargamos el apuntador a la variable en HL
+0045   0020             ;	CALL	INC16	;Incrementamos el contenido de la variable
+0046   0020             ;			; (VAR1)= (VAR1)+1
+0047   0020             			
+0048   0020 06 02       INC16:	LD	B,2
+0049   0022 C3 2F 00    	JP	INC_
+0050   0025 06 03       INC24:	LD	B,3
+0051   0027 C3 2F 00    	JP	INC_
+0052   002A 06 04       INC32:	LD	B,4
+0053   002C C3 2F 00    	JP	INC_
+0054   002F 3E FF       INC_	LD	A,0FFh
+0055   0031 3C          	INC	A	
+0056   0032 7E          CINC_:	LD	A,(HL)
+0057   0033 CE 00       	ADC	A,0
+0058   0035 77          	LD	(HL),A
+0059   0036 23          	INC	HL
+0060   0037 10 F9       	DJNZ	CINC_
+0061   0039 C9          	RET	
+0062   003A             ;/////////////////////////////////////////////////////////////
+0063   003A             
+0064   003A             ;/////////////////////////////////////////////////////////////
+0065   003A             ;Rutinas para sumar numeros de 16,24 y 32 bits
+0066   003A             ;Las direcciones de los datos a sumar se deben guardar 
+0067   003A             ;en HL y DE, y el resultado se guarda en al direccion de la 
+0068   003A             ;variable asignada a HL
+0069   003A             ;
+0070   003A             ;Ejemplo
+0071   003A             ;	LD	DE,VAR1	;Cargamos el apuntador a la variable 1 en DE
+0072   003A             ;	LD	HL,VAR2	;Cargamos el apuntador a la variable 2 en HL
+0073   003A             ;	CALL	SUMA32  ; (VAR2)=(HL)+(DE)
+0074   003A             
+0075   003A 06 02       SUMA16:	LD	B,2
+0076   003C C3 49 00    	JP	SUMA_
+0077   003F 06 03       SUMA24:	LD	B,3
+0078   0041 C3 49 00    	JP	SUMA_	
+0079   0044 06 04       SUMA32:	LD	B,4
+0080   0046 C3 49 00    	JP	SUMA_		
+0081   0049 B7          SUMA_:	OR	A	
+0082   004A 1A          CSUMA_:	LD	A,(DE)
+0083   004B 8E          	ADC	A,(HL)
+0084   004C 77          	LD	(HL),A
+0085   004D 13          	INC	DE
+0086   004E 23          	INC	HL
+0087   004F 10 F9       	DJNZ	CSUMA_
+0088   0051 C9          	RET	
+0089   0052             ;/////////////////////////////////////////////////////////////
+0090   0052             
+0091   0052             ;/////////////////////////////////////////////////////////////
+0092   0052             ;Rutinas para restar numeros de 16,24 y 32 bits
+0093   0052             ;Las direcciones de los datos a restar se deben guardar 
+0094   0052             ;en HL y DE, y el resultado se guarda en al direccion de la 
+0095   0052             ;variable asignada a HL. Se realiza [(HL)=(DE)-(HL)]
+0096   0052             ;
+0097   0052             ;Ejemplo
+0098   0052             ;	LD	DE,VAR1	;Cargamos el apuntador a la variable 1 en DE
+0099   0052             ;	LD	HL,VAR2	;Cargamos el apuntador a la variable 1 en DE
+0100   0052             ;	CALL	RESTA32 ;Hacemos la resta (VAR2)=(DE)-(HL)
+0101   0052             
+0102   0052 06 02       RESTA16:	LD	B,2
+0103   0054 C3 61 00    		JP	RESTA_
+0104   0057 06 03       RESTA24:	LD	B,3
+0105   0059 C3 61 00    		JP	RESTA_	
+0106   005C 06 04       RESTA32:	LD	B,4
+0107   005E C3 61 00    		JP	RESTA_		
+0108   0061 B7          RESTA_:		OR	A	
+0109   0062 1A          CRES_:		LD	A,(DE)
+0110   0063 9E          		SBC	A,(HL)
+0111   0064 77          		LD	(HL),A
+0112   0065 13          		INC	DE
+0113   0066 23          		INC	HL
+0114   0067 10 F9       		DJNZ	CRES_
+0115   0069 C9          		RET	
+0116   006A             ;/////////////////////////////////////////////////////////////
+0117   006A             
+0118   006A 76          FIN:	HALT
+Number of errors = 0

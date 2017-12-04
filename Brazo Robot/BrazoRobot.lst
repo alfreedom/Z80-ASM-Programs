@@ -1,0 +1,286 @@
+0001   0000             ;**Universidad Autonoma de San Luis Potosi**
+0002   0000             ;*******************************************
+0003   0000             ;**********Facultad de Ingeniería***********
+0004   0000             ;*******************************************
+0005   0000             ;
+0006   0000             ;=======================================================
+0007   0000             ;Autor: Alfredo Orozco de la Paz
+0008   0000             ;	Francisco Eduardo Puente Cortez
+0009   0000             ;
+0010   0000             ;Materia: Electronica B
+0011   0000             ;Semestre: 2011/2012 - II
+0012   0000             ;
+0013   0000             ;Programa para controloar un brazo robot mediante
+0014   0000             ;la PC y el sistema minimo.
+0015   0000             ;
+0016   0000             ;
+0017   0000             ;Se conectan 2 motores a pasos mediante el PA del PPI
+0018   0000             ;los cuales controlan los 2 motores del brazo.
+0019   0000             ;
+0020   0000             ;Al PB del PPI se conecta un motor DC, que mueve la base
+0021   0000             ;del brazo, y un servomotor que controla la pinza.
+0022   0000             ;
+0023   0000             ;En el PC del PPI, se conectan los switches de tope
+0024   0000             ;los cuales se usan para saber cuando el brazo ya
+0025   0000             ;llego al tope y no se mueva mas para evitar dañar 
+0026   0000             ;la estructura y los circuitos.
+0027   0000             ;
+0028   0000             ;Los datos de control, para saber que motor se debe mover
+0029   0000             ;se recibiran por el puerto serie.
+0030   0000             ;Se ejecuta la interrupcion NMI cuando un dato a leer esta
+0031   0000             ;disponible en la UART.
+0032   0000             ;
+0033   0000             ;PC <- Entrada(Switches)
+0034   0000             ;PB -> Salida (Al motor DC y al Servomotor)
+0035   0000             ;PA -> Entrada (A los motores a pasos del brazo)
+0036   0000             ;
+0037   0000             ;
+0038   0000             ;  PA0  PA1  PA2  PA3  PA4  PA5  PA6  PA7
+0039   0000             ;   M1   M1   M1   M1   M2   M2   M2   M2
+0040   0000             ;
+0041   0000             ;  PB0  PB1  PB2  PB3  PB4  PB5  PB6  PB7
+0042   0000             ;  DC+  DC-  SV+  SV-   NC   NC   NC   NC
+0043   0000             ;
+0044   0000             ;  PC0  PC1  PC2  PC3  PC4  PC5  PC6  PC7
+0045   0000             ;   S1   S2   S3   S4   NC   NC   NC   NC
+0046   0000             ;
+0047   0000             ;  Palabra de control DEL PPI: 89h
+0048   0000             ;
+0049   0000             ;
+0050   0000             ;Reloj usado 2 MHz
+0051   0000             ;Velocidad       Divisor de baudaje
+0052   0000             ;  2400            0034h  
+0053   0000             ;  4800		   001Ah
+0054   0000             ;  9600		   000Dh
+0055   0000             ;
+0056   0000             ;
+0057   0000             ;Reloj usado 3.5 MHz
+0058   0000             ;Velocidad       Divisor de baudaje
+0059   0000             ;  2400            005Dh  
+0060   0000             ;  4800		   002Eh
+0061   0000             ;  9600		   0017h
+0062   0000             ;=======================================================
+0063   0000             
+0064   0000             		
+0065   0000             
+0066   0000             		M1	 .equ 6004h
+0067   0000             		M2	 .equ 6005h
+0068   0000             		MB	 .equ 6006h
+0069   0000             
+0070   0000             		ORG   0000h
+0071   0000             		
+0072   0000             		;Rutina para programar la UART
+0073   0000             ;Rutina para programar el PPI		
+0074   0000 31 FF 67    PGRMPPI:	LD    SP,67FFh  ;Inicializamos el Stack Pointer
+0075   0003 3E 80       		LD    A,080h    ;Se carga la palabra de control para el PPI
+0076   0005 D3 03       		OUT   (03h),A	;Se programa el PPI
+0077   0007 3E FF       		LD    A,0FFH
+0078   0009 D3 00       		OUT   (00H),A
+0079   000B D3 01       		OUT   (01H),A
+0080   000D             
+0081   000D             		
+0082   000D 3E 80       PGRMUART:	LD    A,80h
+0083   000F D3 A3       		OUT   (0A3h),A
+0084   0011 3E 34       		LD    A,34h	;Divisor de baudaje bajo a 2400b
+0085   0013 D3 A0       		OUT   (0A0h),A
+0086   0015 3E 00       		LD    A,00h	;Divisor de baudaje alto
+0087   0017 D3 A1       		OUT   (0A1h),A
+0088   0019 3E 03       		LD    A,03h	;8bits de dato, 1 bit stop, sin paridad.
+0089   001B D3 A3       		OUT   (0A3h),A
+0090   001D 3E 01       		LD    A,01h	;Habilitamos la interrupcion de la UART
+0091   001F D3 A1       		OUT   (0A1h),A	;por dato recibido.
+0092   0021 C3 74 00    		JP    INICIO
+0093   0024             		
+0094   0024             ;Rutina de servicio de interrupcion, se ejecuta
+0095   0024             ;cuando la UART tiene un dato listo para ser leido.		
+0096   0024             		org	66h
+0097   0066 D9          		EXX
+0098   0067 08          		EX	AF,AF'
+0099   0068 DB A0       		IN	A,(0A0h)
+0100   006A CD 86 00    		CALL	CHECA_COMANDO
+0101   006D CD 11 01    		CALL	MUEVE_BRAZO
+0102   0070 08          		EX	AF,AF'
+0103   0071 D9          		EXX
+0104   0072 ED 45       		RETN
+0105   0074             
+0106   0074             				
+0107   0074             
+0108   0074             	
+0109   0074             		
+0110   0074             ;PROGRAMA PRINCIPAL		
+0111   0074 3E 00       INICIO:		LD	A,00h
+0112   0076 D3 01       		OUT	(01h),A
+0113   0078 3E 88       		LD	A,88H
+0114   007A D3 00       		OUT	(00h),A
+0115   007C 3E 01       		LD	A,01h
+0116   007E 32 04 60    		LD	(M1),A
+0117   0081 32 05 60    		LD	(M2),A		
+0118   0084             		
+0119   0084 76          BUCLE:		HALT
+0120   0085 C9          		RET
+0121   0086             
+0122   0086             		
+0123   0086             		
+0124   0086             CHECA_COMANDO:
+0125   0086 FE 41       		CP	'A'
+0126   0088 CA AF 00    		JP	Z,PASO1_MOTOR1
+0127   008B FE 42       		CP	'B'
+0128   008D CA BE 00    		JP	Z,PASO2_MOTOR1
+0129   0090 FE 43       		CP	'C'
+0130   0092 CA CD 00    		JP	Z,PASO1_MOTOR2
+0131   0095 FE 44       		CP	'D'
+0132   0097 CA DC 00    		JP	Z,PASO2_MOTOR2
+0133   009A FE 2B       		CP	'+'
+0134   009C CA EB 00    		JP	Z,SERVO_MAS
+0135   009F FE 2D       		CP	'-'
+0136   00A1 CA F0 00    		JP	Z,SERVO_MENOS		
+0137   00A4 FE 4C       		CP	'L'
+0138   00A6 CA FE 00    		JP	Z, BASE_MAS
+0139   00A9 FE 52       		CP	'R'
+0140   00AB CA 03 01    		JP	Z, BASE_MENOS
+0141   00AE C9          		RET
+0142   00AF             		
+0143   00AF             
+0144   00AF             ;**********SUBRUTINAS PARA MOVER EL MOTOR DE LA BASE DEL BRAZO**********
+0145   00AF             ;Se mueve el motor de la base un paso en sentido
+0146   00AF             ;de las manecillas del reloj.
+0147   00AF 3A 04 60    PASO1_MOTOR1:	LD	A,(M1)
+0148   00B2 FE 08       		CP	08h
+0149   00B4 C2 B9 00    		JP	NZ,P1M1
+0150   00B7 3E 00       		LD	A,00h
+0151   00B9 3C          P1M1:		INC	A
+0152   00BA 32 04 60    		LD	(M1),A		
+0153   00BD C9          		RET
+0154   00BE             		
+0155   00BE             ;Se mueve el motor de la base un paso en contra
+0156   00BE             ;de las manecillas del reloj.		
+0157   00BE 3A 04 60    PASO2_MOTOR1:	LD	A,(M1)
+0158   00C1 FE 01       		CP	01h
+0159   00C3 C2 C8 00    		JP	NZ,P2M1
+0160   00C6 3E 09       		LD	A,09h
+0161   00C8 3D          P2M1:		DEC	A
+0162   00C9 32 04 60    		LD	(M1),A		
+0163   00CC C9          		RET	
+0164   00CD             ;***********************************************************************
+0165   00CD             
+0166   00CD             
+0167   00CD             ;***************SUBRUTINAS PARA MOVER EL MOTOR DEL BRAZO****************
+0168   00CD             ;Se mueve el motor del brazo un paso en sentido
+0169   00CD             ;de las manecillas del reloj.		
+0170   00CD 3A 05 60    PASO1_MOTOR2:	LD	A,(M2)
+0171   00D0 FE 08       		CP	08h
+0172   00D2 C2 D7 00    		JP	NZ,P1M2
+0173   00D5 3E 00       		LD	A,00h
+0174   00D7 3C          P1M2:		INC	A
+0175   00D8 32 05 60    		LD	(M2),A		
+0176   00DB C9          		RET
+0177   00DC             		
+0178   00DC             ;Se mueve el motor del brazo un paso en contra
+0179   00DC             ;de las manecillas del reloj.		
+0180   00DC 3A 05 60    PASO2_MOTOR2:	LD	A,(M2)
+0181   00DF FE 01       		CP	01h
+0182   00E1 C2 E6 00    		JP	NZ,P2M2
+0183   00E4 3E 09       		LD	A,09h
+0184   00E6 3D          P2M2:		DEC	A
+0185   00E7 32 05 60    		LD	(M2),A		
+0186   00EA C9          		RET				
+0187   00EB             ;***********************************************************************
+0188   00EB             
+0189   00EB 3E 04       SERVO_MAS:	LD	A,04H
+0190   00ED C3 F2 00    		JP	SC
+0191   00F0 3E 08       SERVO_MENOS:	LD	A,08H
+0192   00F2 D3 01       SC:		OUT	(01H),A
+0193   00F4 16 05       		LD	D,05H	;ESPERAR 5MS
+0194   00F6 CD 33 01    		CALL	Delay_ms
+0195   00F9 3E 00       		LD	A,00H
+0196   00FB D3 01       		OUT	(01H),A
+0197   00FD C9          		RET
+0198   00FE             		
+0199   00FE 3E 01       BASE_MAS:	LD	A,01H
+0200   0100 C3 05 01    		JP	SCB
+0201   0103 3E 02       BASE_MENOS:	LD	A,02H
+0202   0105 D3 01       SCB:		OUT	(01H),A
+0203   0107 16 0A       		LD	D,0AH	;ESPERAR 10MS
+0204   0109 CD 33 01    		CALL	Delay_ms
+0205   010C 3E 00       		LD	A,00H
+0206   010E D3 01       		OUT	(01H),A
+0207   0110 C9          		RET
+0208   0111             		
+0209   0111             		
+0210   0111 3A 04 60    MUEVE_BRAZO:	LD	A,(M1)
+0211   0114 01 47 01    		LD	BC,TABLA_PASOSM1
+0212   0117 26 00       		LD	H,0H
+0213   0119 6F          		LD	L,A
+0214   011A 09          		ADD	HL,BC
+0215   011B 56          		LD	D,(HL);
+0216   011C             		
+0217   011C 3A 05 60    		LD	A,(M2)
+0218   011F 01 50 01    		LD	BC,TABLA_PASOSM2
+0219   0122 26 00       		LD	H,0H
+0220   0124 6F          		LD	L,A
+0221   0125 09          		ADD	HL,BC
+0222   0126 7E          		LD	A,(HL);
+0223   0127 B2          		OR	D
+0224   0128 D3 00       		OUT	(00h),A
+0225   012A 16 05       		LD	D,05H	;ESPERAR 5MS
+0226   012C CD 33 01    		CALL	Delay_ms
+0227   012F C9          		RET
+0228   0130             		
+0229   0130             
+0230   0130             
+0231   0130             
+0232   0130             ;Subrturina que escribe un dato en la UART para enviarlo
+0233   0130             ;por el puerto serie
+0234   0130 D3 A0       WRUART:		OUT   (0A0h),A
+0235   0132 C9          		RET
+0236   0133             
+0237   0133             ;Esta rutina de espera, esta hecha para demorar un cierto
+0238   0133             ;tiempo (en milisegundos).
+0239   0133             ;
+0240   0133             ;El tiempo de retardo se especifica en el registro D
+0241   0133             ;
+0242   0133             ;Por ejemplo, si se desea esperar 100 ms, el registro
+0243   0133             ;D se carga con 100 (64h) y a continuacion se hace una
+0244   0133             ;llamada a la subrutina Delay_ms.
+0245   0133             
+0246   0133 D5          Delay_ms: PUSH DE 	;guardamos el par de reigstros DE en la pila
+0247   0134 D9          	EXX		;Respaldamos todos los registros, en los
+0248   0135             			;registros complementarios.	
+0249   0135 08          	EX  AF,AF'	;guardamos el registro A y el registro de banderas
+0250   0136             			;en los registros A' y F'.
+0251   0136 D1          	POP DE		;restauramos los registros DE, sacandolo de la pila
+0252   0137 01 67 00    CICLO:	LD  BC,0067h	;cargamos BC con 0067h, para demorar 1ms
+0253   013A 0B          CICLO2:	DEC BC		;decrementamos BC
+0254   013B 79          	LD  A,C		;cargamos C en A para para compara si BC es 0
+0255   013C B0          	OR  B		;comparamos a con B
+0256   013D C2 3A 01    	JP  NZ,CICLO2	;si no es cero, saltamos a ciclo 2;
+0257   0140 15          	DEC D		;decrementamos D (contador de milisegundos)
+0258   0141 C2 37 01    	JP  NZ,CICLO	;si no es cero, saltamos a ciclo1
+0259   0144 08          	EX  AF,AF'	;restauramos el acumulador y el registro de
+0260   0145             			;banderas
+0261   0145 D9          	EXX		;restauramos todos los registros guardados en
+0262   0146             			;los registros complementariso.
+0263   0146 C9          	RET		;retorno de la subrutina.
+0264   0147             			
+0265   0147             TABLA_PASOSM1:
+0266   0147 01          		DEFB	01h ;0000 0001
+0267   0148 01          		DEFB	01h ;0000 0001	
+0268   0149 03          		DEFB	03h ;0000 0011	
+0269   014A 02          		DEFB	02h ;0000 0010	
+0270   014B 06          		DEFB	06h ;0000 0110	
+0271   014C 04          		DEFB	04h ;0000 0100	
+0272   014D 0C          		DEFB	0Ch ;0000 1100	
+0273   014E 08          		DEFB	08h ;0000 1000	
+0274   014F 09          		DEFB	09h ;0000 1001	
+0275   0150             		
+0276   0150             TABLA_PASOSM2:
+0277   0150 10          		DEFB	010h ;0001 0000
+0278   0151 10          		DEFB	010h ;0001 0000	
+0279   0152 30          		DEFB	030h ;0011 0000 	
+0280   0153 20          		DEFB	020h ;0010 0000 	
+0281   0154 60          		DEFB	060h ;0110 0000 	
+0282   0155 40          		DEFB	040h ;0100 0000 	
+0283   0156 C0          		DEFB	0C0h ;1100 0000 	
+0284   0157 80          		DEFB	080h ;1000 0000 	
+0285   0158 90          		DEFB	090h ;1001 0000 				
+Number of errors = 0

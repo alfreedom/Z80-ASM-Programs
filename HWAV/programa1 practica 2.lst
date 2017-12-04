@@ -1,0 +1,32 @@
+0001   0000             
+0002   0000             	.ORG 00000H
+0003   0000             	
+0004   0000 16 0F       	LD	D,00fH     ;carga el numero de ms en D
+0005   0002 C3 06 00    	JP	RETARDO_MS ;Salta a la rutina RETARDO_MS
+0006   0005             CONT_RETARDO:		  ;Etiqueta de regreso
+0007   0005 76          	HALT	      ;modo halt
+0008   0006             
+0009   0006             
+0010   0006             RETARDO_MS:
+0011   0006 42          	LD	B,D
+0012   0007             CICLO_R:
+0013   0007 C3 0F 00    	JP	 DELAY_1MS
+0014   000A             CONT_MS:
+0015   000A 10 FB       	DJNZ CICLO_R
+0016   000C C3 05 00    	JP CONT_RETARDO
+0017   000F             
+0018   000F             DELAY_1MS:
+0019   000F             ;Subrutina que demora aprox 1ms con una frecuencia de 8 MHZ
+0020   000F D9          	EXX
+0021   0010 08          	EX	AF,AF'
+0022   0011 01 4B 01    	LD	BC,0014Bh	;carga BC con 0067h, para demorar 1ms a 8 MHZ
+0023   0014             CICLO_D:	
+0024   0014 0B          	DEC BC		 ;decrementa BC
+0025   0015 79          	LD  A,C		 ;carga C en A para para compara si BC es 0
+0026   0016 B0          	OR  B		 ;compara A con B
+0027   0017 C2 14 00    	JP  NZ,CICLO_D	;si no es cero, saltamos a ciclo 2;
+0028   001A 08          	EX	AF,AF'	 ;restaura los registros A y F
+0029   001B D9          	EXX			 ;restaura todos los registros guardados en
+0030   001C             				 ;los registros complementarios.
+0031   001C C3 0A 00    	JP	CONT_MS ;salta a la etiqueta CONTINUA.
+Number of errors = 0

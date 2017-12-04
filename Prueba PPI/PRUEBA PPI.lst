@@ -1,0 +1,10 @@
+0001   0000             
+0002   0000             
+0003   0000 3E 80       	LD A,080h
+0004   0002 D3 03       	OUT (03h),A
+0005   0004 3E FF       	LD A,0FFh
+0006   0006 D3 00       CICLO:  OUT (00h),A
+0007   0008 D3 01       	OUT (01h),A
+0008   000A D3 02       	OUT (02h),A
+0009   000C C3 06 00    	JP CICLO	
+Number of errors = 0

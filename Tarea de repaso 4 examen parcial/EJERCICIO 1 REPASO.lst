@@ -1,0 +1,116 @@
+0001   0000             ;Tarea de Repaso 4 parcial Electronica B
+0002   0000             ;
+0003   0000             ;Este programa lee una tecla del teclado matricial
+0004   0000             ;y lo muestra en el LCD.
+0005   0000             ;
+0006   0000             ;El programa lee la tecla mediante interrupciones,
+0007   0000             ;configuradas en el modo 1, el cual salta a la direccion
+0008   0000             ;38h, cuando se presente la interrupcion.
+0009   0000             ;
+0010   0000             ;PA = ENTRADA DEL TECLADO MATRICIAL
+0011   0000             ;PB = SALIDA AL BUS DE DATOS DEL DISPLAY
+0012   0000             ;PC = SALIDA AL BUS DE CONTROL DEL DISPLAY
+0013   0000             ;
+0014   0000             ;Orozco de la Paz Alfredo
+0015   0000             ;Puente Cortez Francisco Eduardo
+0016   0000             ;Fraga Cordoba José Santos
+0017   0000             
+0018   0000             	
+0019   0000             	ORG 00h
+0020   0000 C3 49 00    	JP   INICIO
+0021   0003             	
+0022   0003             	ORG  38h
+0023   0038 DB 00       	IN   A,(00h)
+0024   003A E6 0F       	AND  0FH
+0025   003C 21 B8 00    	LD   HL,TABLALCD
+0026   003F 5F          	LD   E,A
+0027   0040 16 00       	LD   D,0
+0028   0042 19          	ADD  HL,DE
+0029   0043 CD 73 00    	CALL WRLCD
+0030   0046 FB          	EI
+0031   0047 ED 4D       	RETI
+0032   0049             	
+0033   0049             	
+0034   0049             INICIO:
+0035   0049 ED 56       	IM    1
+0036   004B FB          	EI
+0037   004C 31 FF 67    	LD    SP,67FFh
+0038   004F 3E 38       	LD    A,38h
+0039   0051 D3 01       	OUT   (01H),A
+0040   0053 CD 7A 00    	CALL  CONTROL1
+0041   0056 3E 06       	LD   A,06h
+0042   0058 D3 01       	OUT  (01H),A
+0043   005A CD 7A 00    	CALL  CONTROL1
+0044   005D 3E 0F       	LD   A,0Fh
+0045   005F D3 01       	OUT  (01H),A
+0046   0061 CD 7A 00    	CALL  CONTROL1
+0047   0064 3E 80       	LD   A,80h
+0048   0066 D3 01       	OUT  (01H),A
+0049   0068 CD 7A 00    	CALL  CONTROL1
+0050   006B 3E 01       	LD   A,01h
+0051   006D D3 01       	OUT  (01H),A
+0052   006F CD 7A 00    	CALL  CONTROL1
+0053   0072 76          	HALT
+0054   0073             	
+0055   0073             WRLCD:	
+0056   0073 7E          	LD    A,(HL)
+0057   0074 D3 01       	OUT   (01H),A
+0058   0076 CD 90 00    	CALL  CONTROL2
+0059   0079 C9          	RET
+0060   007A             	
+0061   007A             CONTROL1:	
+0062   007A 3E 00       	LD    A,00H
+0063   007C D3 02       	OUT   (02H),A
+0064   007E CD A6 00    	CALL  ESPERA
+0065   0081 3E 04       	LD    A,04H
+0066   0083 D3 02       	OUT   (02H),A
+0067   0085 CD A6 00    	CALL  ESPERA
+0068   0088 3E 00       	LD    A,00H
+0069   008A D3 02       	OUT   (02H),A
+0070   008C CD A6 00    	CALL  ESPERA
+0071   008F C9          	RET
+0072   0090             	
+0073   0090             CONTROL2:	
+0074   0090 3E 02       	LD    A,02H
+0075   0092 D3 02       	OUT   (02H),A
+0076   0094 CD A6 00    	CALL  ESPERA
+0077   0097 3E 06       	LD    A,06H
+0078   0099 D3 02       	OUT   (02H),A
+0079   009B CD A6 00    	CALL  ESPERA
+0080   009E 3E 02       	LD    A,02H
+0081   00A0 D3 02       	OUT   (02H),A
+0082   00A2 CD A6 00    	CALL  ESPERA
+0083   00A5 C9          	RET
+0084   00A6             ESPERA:
+0085   00A6 16 02       	LD    D,02H
+0086   00A8 D5          	PUSH  DE
+0087   00A9 D9          	EXX
+0088   00AA 08          	EX    AF,AF'
+0089   00AB D1          	POP   DE
+0090   00AC 01 67 00    CICLO:	LD    BC,0067H
+0091   00AF 0B          CICLO2:	DEC   BC
+0092   00B0 79          	LD    A,C
+0093   00B1 B0          	OR    B
+0094   00B2 C2 AF 00    	JP    NZ,CICLO2
+0095   00B5 08          	EX    AF,AF'
+0096   00B6 D9          	EXX
+0097   00B7 C9          	RET	
+0098   00B8             TABLALCD:
+0099   00B8 31          	DEFB	"1"
+0100   00B9 32          	DEFB	"2"
+0101   00BA 33          	DEFB	"3"
+0102   00BB 41          	DEFB	"A"
+0103   00BC 34          	DEFB	"4"
+0104   00BD 35          	DEFB	"5"
+0105   00BE 36          	DEFB	"6"
+0106   00BF 42          	DEFB	"B"
+0107   00C0 37          	DEFB	"7"
+0108   00C1 38          	DEFB	"8"
+0109   00C2 39          	DEFB	"9"
+0110   00C3 43          	DEFB	"C"
+0111   00C4 2A          	DEFB	"*"
+0112   00C5 30          	DEFB	"0"
+0113   00C6 23          	DEFB	"#"
+0114   00C7 44          	DEFB	"D"
+0115   00C8             	END
+Number of errors = 0

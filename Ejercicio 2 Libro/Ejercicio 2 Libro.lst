@@ -1,0 +1,35 @@
+0001   0000             ;*************************************
+0002   0000             ;Suma binaria de 16 bits
+0003   0000             ;
+0004   0000             ;Autor: Alfredo Orozco de la paz
+0005   0000             ;
+0006   0000             ;Fecha: 5 de marzo del 2012
+0007   0000             ;*************************************
+0008   0000             
+0009   0000             ;Las direcciones de los operandos
+0010   0000             ;y de los resultados ocupan 2 bytes
+0011   0000             ;se resenrvan 2 bytes para cada variable.
+0012   0000             loc1 equ 019h	
+0013   0000             loc2 equ 01bh
+0014   0000             loc3 equ 01dh
+0015   0000             
+0016   0000 AF          	XOR	A		;limpiamos el acarreo
+0017   0001 3A 19 00    	LD	A,(loc1)	;cargamos en a el byte bajo del primer
+0018   0004             				;operador.
+0019   0004 21 1B 00    	LD	HL,loc2		;cargamos en HL la direccion del byte
+0020   0007             				;bajo del segundo operador.
+0021   0007 86          	ADD	A,(HL)		;sumamos los 2 bytes bajos sin tomar 
+0022   0008             				;sin tomar en cuenta el acarreo.
+0023   0008 32 1D 00    	LD	(loc3),A	;guardamos el resultado en el byte bajo
+0024   000B             				;de la variable.
+0025   000B 3A 1A 00    	LD 	A,(loc1+1)	;cargamos en A el byte alto del primer
+0026   000E             				;operador.
+0027   000E 23          	INC	HL		;incrementamos el apuntador del segundo
+0028   000F             				;operando, ahora apunta al byte alto.
+0029   000F 8E          	ADC	A,(HL)		;sumamos los 2 bytes datos tomando en
+0030   0010             				;cuenta el acarreo.
+0031   0010 32 1E 00    	LD	(loc3+1),A	;guardamos el resultado en el byte
+0032   0013             				;alto de la variable
+0033   0013 76          	HALT
+0034   0014             	
+Number of errors = 0

@@ -1,0 +1,119 @@
+0001   0000             ;Tarea de Repaso 4 parcial Electronica B
+0002   0000             ;
+0003   0000             ;Este programa lee una caracter recibido de la UART
+0004   0000             ;y lo muestra en el LCD.
+0005   0000             ;
+0006   0000             ;El programa lee la el contenido de la uart mediante
+0007   0000             ;La interrupcion NMI, el cual salta a la direccion
+0008   0000             ;66h, cuando se presente la interrupcion.
+0009   0000             ;
+0010   0000             ;PA = NC
+0011   0000             ;PB = SALIDA AL BUS DE DATOS DEL DISPLAY
+0012   0000             ;PC = SALIDA AL BUS DE CONTROL DEL DISPLAY
+0013   0000             ;
+0014   0000             ;Orozco de la Paz Alfredo
+0015   0000             ;Puente Cortez Francisco Eduardo
+0016   0000             ;Fraga Cordoba José Santos
+0017   0000             
+0018   0000             	
+0019   0000             	ORG 00h
+0020   0000 C3 6D 00    	JP   INICIO
+0021   0003             	
+0022   0003             	ORG  66h
+0023   0066 DB A0       	IN   A,(0A0h)
+0024   0068 CD A8 00    	CALL WRLCD
+0025   006B ED 45       	RETN
+0026   006D             	
+0027   006D             	
+0028   006D             INICIO:
+0029   006D 31 FF 67    	LD    SP,67FFh
+0030   0070 3E 38       	LD    A,38h
+0031   0072 D3 01       	OUT   (01H),A
+0032   0074 CD AE 00    	CALL  CONTROL1
+0033   0077 3E 06       	LD   A,06h
+0034   0079 D3 01       	OUT  (01H),A
+0035   007B CD AE 00    	CALL  CONTROL1
+0036   007E 3E 0F       	LD   A,0Fh
+0037   0080 D3 01       	OUT  (01H),A
+0038   0082 CD AE 00    	CALL  CONTROL1
+0039   0085 3E 80       	LD   A,80h
+0040   0087 D3 01       	OUT  (01H),A
+0041   0089 CD AE 00    	CALL  CONTROL1
+0042   008C 3E 01       	LD   A,01h
+0043   008E D3 01       	OUT  (01H),A
+0044   0090 CD AE 00    	CALL  CONTROL1
+0045   0093             	
+0046   0093             ;Rutina para programar la UART
+0047   0093 3E 80       PGRMUART:	LD    A,80h	;Activacion del DLAB
+0048   0095 D3 A3       		OUT   (0A3h),A
+0049   0097 3E 10       		LD    A,10h	;Divisor de baudaje bajo
+0050   0099 D3 A0       		OUT   (0A0h),A
+0051   009B 3E 00       		LD    A,00h	;Divisor de baudaje alto
+0052   009D D3 A1       		OUT   (0A1h),A
+0053   009F 3E 07       		LD    A,07h	;8bits de dato, 1 bit stop, sin paridad.
+0054   00A1 D3 A3       		OUT   (0A3h),A
+0055   00A3 3E 01       		LD    A, 01h	;Activacion de interrupcion por dato recibido
+0056   00A5 D3 A1       		OUT   (0A1h),A
+0057   00A7 76          	HALT
+0058   00A8             	
+0059   00A8             WRLCD:	
+0060   00A8 D3 01       	OUT   (01H),A
+0061   00AA CD C4 00    	CALL  CONTROL2
+0062   00AD C9          	RET
+0063   00AE             	
+0064   00AE             CONTROL1:	
+0065   00AE 3E 00       	LD    A,00H
+0066   00B0 D3 02       	OUT   (02H),A
+0067   00B2 CD DA 00    	CALL  ESPERA
+0068   00B5 3E 04       	LD    A,04H
+0069   00B7 D3 02       	OUT   (02H),A
+0070   00B9 CD DA 00    	CALL  ESPERA
+0071   00BC 3E 00       	LD    A,00H
+0072   00BE D3 02       	OUT   (02H),A
+0073   00C0 CD DA 00    	CALL  ESPERA
+0074   00C3 C9          	RET
+0075   00C4             	
+0076   00C4             CONTROL2:	
+0077   00C4 3E 02       	LD    A,02H
+0078   00C6 D3 02       	OUT   (02H),A
+0079   00C8 CD DA 00    	CALL  ESPERA
+0080   00CB 3E 06       	LD    A,06H
+0081   00CD D3 02       	OUT   (02H),A
+0082   00CF CD DA 00    	CALL  ESPERA
+0083   00D2 3E 02       	LD    A,02H
+0084   00D4 D3 02       	OUT   (02H),A
+0085   00D6 CD DA 00    	CALL  ESPERA
+0086   00D9 C9          	RET
+0087   00DA             ESPERA:
+0088   00DA 16 02       	LD    D,02H
+0089   00DC D5          	PUSH  DE
+0090   00DD D9          	EXX
+0091   00DE 08          	EX    AF,AF'
+0092   00DF D1          	POP   DE
+0093   00E0 01 67 00    CICLO:	LD    BC,0067H
+0094   00E3 0B          CICLO2:	DEC   BC
+0095   00E4 79          	LD    A,C
+0096   00E5 B0          	OR    B
+0097   00E6 C2 E3 00    	JP    NZ,CICLO2
+0098   00E9 08          	EX    AF,AF'
+0099   00EA D9          	EXX
+0100   00EB C9          	RET	
+0101   00EC             TABLALCD:
+0102   00EC 31          	DEFB	"1"
+0103   00ED 32          	DEFB	"2"
+0104   00EE 33          	DEFB	"3"
+0105   00EF 41          	DEFB	"A"
+0106   00F0 34          	DEFB	"4"
+0107   00F1 35          	DEFB	"5"
+0108   00F2 36          	DEFB	"6"
+0109   00F3 42          	DEFB	"B"
+0110   00F4 37          	DEFB	"7"
+0111   00F5 38          	DEFB	"8"
+0112   00F6 39          	DEFB	"9"
+0113   00F7 43          	DEFB	"C"
+0114   00F8 2A          	DEFB	"*"
+0115   00F9 30          	DEFB	"0"
+0116   00FA 23          	DEFB	"#"
+0117   00FB 44          	DEFB	"D"
+0118   00FC             	END
+Number of errors = 0

@@ -1,0 +1,75 @@
+0001   0000             ;**Universidad Autonoma de San Luis Potosi**
+0002   0000             ;*******************************************
+0003   0000             ;**********Facultad de Ingeniería***********
+0004   0000             ;*******************************************
+0005   0000             ;============================================
+0006   0000             ;Autor: Alfredo Orozco de la Paz
+0007   0000             ;Materia: Electronica B
+0008   0000             ;
+0009   0000             ;
+0010   0000             ;Programa que lee el teclado matricial
+0011   0000             ;conectado al PC Bajo, con el circuito
+0012   0000             ;74C922.
+0013   0000             ;
+0014   0000             ;PC -> Salida (A un display de 7 Seg.)
+0015   0000             ;PB -> Salida (sin uso)
+0016   0000             ;PA <- Entrada (Al las salidas del circuito de teclado)
+0017   0000             ;  PA0  PA1  PA2  PA3  PA4  PA5  PA6  PA7
+0018   0000             ;   nc   nc  nc   nc   D0   D1   D2   D3
+0019   0000             ;Palabra de control: 90h
+0020   0000             ;=============================================
+0021   0000             
+0022   0000             
+0023   0000             DISPLAY  .EQU 6000h
+0024   0000             		ORG   0000h		
+0025   0000 31 FF 67    PGRMPPI:	LD    SP,67FFh  ;Inicializamos el Stack Pointer
+0026   0003 3E 90       		LD    A,090h    ;Se carga la palabra de control para el PPI
+0027   0005 D3 03       		OUT   (03h),A	
+0028   0007 3E 40       		LD    A,040h	
+0029   0009 D3 02       		OUT   (02h),A
+0030   000B             		
+0031   000B DB 00       INICIO:		IN    A,(00h)
+0032   000D CB 5F       		BIT   3,A
+0033   000F CA 0B 00    		JP    Z,INICIO
+0034   0012 5F          		LD    E,A
+0035   0013 DB 00       SOLTAR:		IN    A,(00h)
+0036   0015 CB 5F       		BIT   3,A
+0037   0017 C2 13 00    		JP    NZ,SOLTAR
+0038   001A 7B          		LD    A,E
+0039   001B E6 F0       		AND   0F0h
+0040   001D CB 3F       		SRL   A
+0041   001F CB 3F       		SRL   A
+0042   0021 CB 3F       		SRL   A
+0043   0023 CB 3F       		SRL   A
+0044   0025 21 33 00    		LD    HL,TABLA7S
+0045   0028 5F          		LD    E,A
+0046   0029 16 00       		LD    D,0
+0047   002B 19          		ADD   HL,DE
+0048   002C 7E          		LD    A,(HL)
+0049   002D D3 02       		OUT   (02h),A
+0050   002F C3 0B 00    		JP    INICIO		
+0051   0032 76          		HALT
+0052   0033             
+0053   0033             TABLA7S:	
+0054   0033 06          		DEFB   006h  ;1
+0055   0034 5B          		DEFB   05bh  ;2
+0056   0035 4F          		DEFB   04Fh  ;3
+0057   0036 77          		DEFB   077h  ;A
+0058   0037 66          		DEFB   066h  ;4
+0059   0038 6D          		DEFB   06Dh  ;5
+0060   0039 FD          		DEFB   0FDh  ;6
+0061   003A 7C          		DEFB   07Ch  ;B
+0062   003B 47          		DEFB   047h  ;7
+0063   003C 7F          		DEFB   07Fh  ;8
+0064   003D 67          		DEFB   067h  ;9
+0065   003E 39          		DEFB   039h  ;C	
+0066   003F 79          		DEFB   079h  ;E
+0067   0040 3F          		DEFB   03Fh  ;0
+0068   0041 71          		DEFB   071h  ;F			
+0069   0042 5E          		DEFB   05Eh  ;D
+0070   0043 40          		DEFB   040h  ;guion	
+0071   0044             		END
+0072   0044             
+0073   0044             
+0074   0044             		
+Number of errors = 0

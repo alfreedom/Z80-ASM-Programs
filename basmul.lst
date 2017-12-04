@@ -1,0 +1,76 @@
+0001   0000             ; Compiled with: Z80 Simulator IDE - Registered Copy v9.81
+0002   0000             ; Microprocessor model: Z80
+0003   0000             ; Clock frequency: 4MHz
+0004   0000             ;
+0005   0000             ;       The address of 'a' (integer) (global) is FEFEH (IX-2)
+0006   0000             a:	.EQU 0FEFEH
+0007   0000             ;       The address of 'b' (integer) (global) is FEFCH (IX-4)
+0008   0000             b:	.EQU 0FEFCH
+0009   0000             ;       The address of 'c' (integer) (global) is FEFAH (IX-6)
+0010   0000             c:	.EQU 0FEFAH
+0011   0000             ; Begin
+0012   0000 DD 21 00 FF 	LD IX,0FF00H
+0013   0004 31 FA FE    	LD SP,0FEFAH
+0014   0007             ; Begin of program
+0015   0007             ; 1: Dim a As Integer
+0016   0007 3E 00       	LD A,00H
+0017   0009 DD 77 FE    	LD (IX-02H),A
+0018   000C DD 77 FF    	LD (IX-01H),A
+0019   000F             ; 2: Dim b As Integer
+0020   000F 3E 00       	LD A,00H
+0021   0011 DD 77 FC    	LD (IX-04H),A
+0022   0014 DD 77 FD    	LD (IX-03H),A
+0023   0017             ; 3: Dim c As Integer
+0024   0017 3E 00       	LD A,00H
+0025   0019 DD 77 FA    	LD (IX-06H),A
+0026   001C DD 77 FB    	LD (IX-05H),A
+0027   001F             ; 4: 
+0028   001F             ; 5: a = 4  'First number
+0029   001F 21 04 00    	LD HL,0004H
+0030   0022 DD 75 FE    	LD (IX-02H),L
+0031   0025 DD 74 FF    	LD (IX-01H),H
+0032   0028             ; 6: b = 2  'Second number
+0033   0028 21 02 00    	LD HL,0002H
+0034   002B DD 75 FC    	LD (IX-04H),L
+0035   002E DD 74 FD    	LD (IX-03H),H
+0036   0031             ; 7: c = a * b
+0037   0031 DD 6E FE    	LD L,(IX-02H)
+0038   0034 DD 66 FF    	LD H,(IX-01H)
+0039   0037 DD 5E FC    	LD E,(IX-04H)
+0040   003A DD 56 FD    	LD D,(IX-03H)
+0041   003D CD 47 00    	CALL M001
+0042   0040 DD 75 FA    	LD (IX-06H),L
+0043   0043 DD 74 FB    	LD (IX-05H),H
+0044   0046             ; End of program
+0045   0046 76          	HALT
+0046   0047             ; Integer Multiplication Routine
+0047   0047 C5          M001:	PUSH BC
+0048   0048 44          	LD B,H
+0049   0049 4D          	LD C,L
+0050   004A 21 00 00    	LD HL,0000H
+0051   004D 3E 10       	LD A,10H
+0052   004F 15          M003:	DEC D
+0053   0050 14          	INC D
+0054   0051 20 0F       	JR NZ,M002
+0055   0053 FE 09       	CP 09H
+0056   0055 38 0B       	JR C,M002
+0057   0057 D6 08       	SUB 08H
+0058   0059 F5          	PUSH AF
+0059   005A 53          	LD D,E
+0060   005B 5C          	LD E,H
+0061   005C 65          	LD H,L
+0062   005D 2E 00       	LD L,00H
+0063   005F F1          	POP AF
+0064   0060 18 ED       	JR M003
+0065   0062 29          M002:	ADD HL,HL
+0066   0063 CB 13       	RL E
+0067   0065 CB 12       	RL D
+0068   0067 30 01       	JR NC,M004
+0069   0069 09          	ADD HL,BC
+0070   006A 3D          M004:	DEC A
+0071   006B 20 E2       	JR NZ,M003
+0072   006D C1          	POP BC
+0073   006E C9          	RET
+0074   006F             ; End of listing
+0075   006F             	.END
+Number of errors = 0

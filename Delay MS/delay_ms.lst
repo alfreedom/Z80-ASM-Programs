@@ -1,0 +1,35 @@
+0001   0000             ;Nombre del Programa: Rutina de retardo en ms (milisegundos)
+0002   0000             ;Autor: Alfredo Orozco de la Paz
+0003   0000             ;
+0004   0000             ;Esta rutina de espera, esta hecha para demorar un cierto
+0005   0000             ;tiempo (en milisegundos).
+0006   0000             ;
+0007   0000             ;El tiempo de retardo se especifica en el registro D
+0008   0000             ;
+0009   0000             ;Por ejemplo, si se desea esperar 100 ms, el registro
+0010   0000             ;D se carga con 100 (64h) y a continuacion se hace una
+0011   0000             ;llamada a la subrutina Delay_ms.
+0012   0000             ;
+0013   0000 16 09       	LD	D,09h 
+0014   0002 CD 06 00    	CALL Delay_ms  
+0015   0005             
+0016   0005 76          	HALT
+0017   0006             
+0018   0006 D5          Delay_ms: PUSH DE 
+0019   0007 D9          	EXX
+0020   0008 08          	EX  AF,AF'
+0021   0009 D1          	POP DE
+0022   000A 01 67 00    CICLO:	LD  BC,0067h
+0023   000D 0B          CICLO2:	DEC BC
+0024   000E 79          	LD  A,C
+0025   000F B0          	OR  B
+0026   0010 C2 0D 00    	JP  NZ,CICLO2
+0027   0013 15          	DEC D
+0028   0014 C2 0A 00    	JP  NZ,CICLO
+0029   0017 08          	EX  AF,AF'
+0030   0018 D9          	EXX
+0031   0019 C9          	RET
+0032   001A             	
+0033   001A             	
+0034   001A             	
+Number of errors = 0

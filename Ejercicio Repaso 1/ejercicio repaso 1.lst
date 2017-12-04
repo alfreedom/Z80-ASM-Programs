@@ -1,0 +1,71 @@
+0001   0000             ;Ejercicio 1 de la tarea de repaso.
+0002   0000             ;
+0003   0000             ;El programa debe encontrar el numero mas
+0004   0000             ;pequeño de una lista de numeros de 16 bits
+0005   0000             ;sin signo que estan en localidades consecutivas
+0006   0000             ;de memoria.
+0007   0000             ;
+0008   0000             ;la primera direccion se encuentra en las localidades
+0009   0000             ;1900h y 1901h, el numero de elementos del arreglo
+0010   0000             ;esta en la localidad 1902h, el elemento mas pequeño 
+0011   0000             ;se guarda en la localidad 1903.
+0012   0000             
+0013   0000             	 ORG	0000h
+0014   0000 31 FF 67    	 LD	SP,67FFh
+0015   0003 21 02 19    	 LD 	HL,1902h
+0016   0006 46          	 LD	B,(HL)
+0017   0007 05          	 dec    B
+0018   0008 DD 21 00 19 	 LD 	IX,1900h
+0019   000C DD 66 01    	 LD	H,(IX+1)
+0020   000F DD 6E 00    	 LD	L,(IX+0)	
+0021   0012 E5          	 PUSH 	HL
+0022   0013 DD 2B       	 DEC	IX
+0023   0015 DD 2B       	 DEC	IX
+0024   0017 E1          CICLO:   POP	HL
+0025   0018 4C          	 LD 	C,H
+0026   0019 DD 7E 01    	 LD 	A,(IX+1)
+0027   001C B9          	 CP 	C
+0028   001D DA 34 00    	 JP 	C,A_MENOR
+0029   0020 CA 42 00    	 JP 	Z,IGUALES
+0030   0023 E5          	 PUSH	HL
+0031   0024 DD 2B       	 DEC 	IX
+0032   0026 DD 2B       	 DEC	IX
+0033   0028 10 ED       CONT:	 DJNZ	CICLO
+0034   002A E1          	 POP	HL
+0035   002B 22 03 19    	 LD	(1903h),HL
+0036   002E 3A 03 19    	 LD	A,(1903h)
+0037   0031 D3 00       	 OUT	(00h),A
+0038   0033 76          	HALT
+0039   0034 DD 66 01    A_MENOR: LD	H,(IX+1)
+0040   0037 DD 6E 00    	 LD	L,(IX+0)	
+0041   003A E5          	 PUSH 	HL
+0042   003B DD 2B       	 DEC	IX
+0043   003D DD 2B       	 DEC	IX
+0044   003F C3 28 00    	 JP	CONT
+0045   0042 4D          IGUALES: LD 	C,L
+0046   0043 DD 7E 00    	 LD	A,(IX+0)
+0047   0046 B9          	 CP 	C
+0048   0047 DA 34 00    	 JP	C,A_MENOR
+0049   004A E5          	 PUSH 	HL
+0050   004B DD 2B       	 DEC 	IX
+0051   004D DD 2B       	 DEC	IX
+0052   004F C3 28 00    	 JP 	CONT
+0053   0052             	
+0054   0052             	org  18EEh
+0055   18EE 10 00       	DEFW 0010h
+0056   18F0 34 00       	DEFW 0034h
+0057   18F2 09 00       	DEFW 0009h
+0058   18F4 02 00       	DEFW 0002h
+0059   18F6 30 00       	DEFW 0030h
+0060   18F8 07 00       	DEFW 0007h
+0061   18FA 45 00       	DEFW 0045h
+0062   18FC 05 00       	DEFW 0005h
+0063   18FE 09 00       	DEFW 0009h
+0064   1900 06 00       	DEFW 0006h
+0065   1902 0A          	DEFB 000Ah
+0066   1903             	
+0067   1903             
+0068   1903             
+0069   1903             
+0070   1903             
+Number of errors = 0

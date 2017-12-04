@@ -1,0 +1,214 @@
+0001   0000             ;**Universidad Autonoma de San Luis Potosi**
+0002   0000             ;*******************************************
+0003   0000             ;**********Facultad de Ingeniería***********
+0004   0000             ;*******************************************
+0005   0000             ;
+0006   0000             ;=======================================================
+0007   0000             ;Autor: Alfredo Orozco de la Paz
+0008   0000             ;Materia: Electronica B
+0009   0000             ;
+0010   0000             ;
+0011   0000             ;Programa que lee el teclado matricial
+0012   0000             ;conectado al PC Bajo, con el circuito
+0013   0000             ;74C922, y muestra la tecla presionada en 
+0014   0000             ;un display de cristal liquido LCD
+0015   0000             ;
+0016   0000             ;PC -> Salida (Bus de control del Display LCD)
+0017   0000             ;PB -> Salida (Bus de datos del Display LCD)
+0018   0000             ;PA <- Entrada (Al las salidas del circuito de teclado)
+0019   0000             ;  PA0  PA1  PA2  PA3  PA4  PA5  PA6  PA7
+0020   0000             ;   nc   nc  nc   DD   D0   D1   D2   D3
+0021   0000             ;
+0022   0000             ;  DD = Dato Disponible
+0023   0000             ;  D0-D3 = Codigo de la tecla
+0024   0000             ;
+0025   0000             ;  Palabra de control: 90h
+0026   0000             ;
+0027   0000             ;
+0028   0000             ;Reloj usado 2 MHz
+0029   0000             ;Velocidad       Divisor de baudaje
+0030   0000             ;  2400            0034h  
+0031   0000             ;  4800		   001Ah
+0032   0000             ;  9600		   000Dh
+0033   0000             ;
+0034   0000             ;
+0035   0000             ;Reloj usado 3.5 MHz
+0036   0000             ;Velocidad       Divisor de baudaje
+0037   0000             ;  2400            005Dh  
+0038   0000             ;  4800		   002Eh
+0039   0000             ;  9600		   0017h
+0040   0000             ;=======================================================
+0041   0000             
+0042   0000             		chars  .EQU 6000h ;variable que sirve como contador de
+0043   0000             				  ;caracteres.
+0044   0000             	        recibido .equ 6001h
+0045   0000             		dato     .equ 6003h
+0046   0000             
+0047   0000             
+0048   0000             		ORG   0000h
+0049   0000 ED 56       		IM    1
+0050   0002             		;EI
+0051   0002             		;Rutina para programar la UART
+0052   0002 3E 80       PGRMUART:	LD    A,80h
+0053   0004 D3 A3       		OUT   (0A3h),A
+0054   0006 3E 34       		LD    A,34h	;Divisor de baudaje bajo a 2400b
+0055   0008 D3 A0       		OUT   (0A0h),A
+0056   000A 3E 00       		LD    A,00h	;Divisor de baudaje alto
+0057   000C D3 A1       		OUT   (0A1h),A
+0058   000E 3E 03       		LD    A,03h	;8bits de dato, 1 bit stop, sin paridad.
+0059   0010 D3 A3       		OUT   (0A3h),A
+0060   0012 3E 01       		LD    A,01h
+0061   0014 D3 A1       		OUT   (0A1h),A
+0062   0016 C3 71 00    		JP    PGRMPPI
+0063   0019             		
+0064   0019             		org   38h
+0065   0038 CD AE 00    		call  ENVIATECLA
+0066   003B FB          		EI
+0067   003C ED 4D       		RETI
+0068   003E             		
+0069   003E             		org   66h
+0070   0066 D9          		EXX
+0071   0067 08          		EX    AF,AF'
+0072   0068 DB A0       		IN    A,(0A0h)
+0073   006A CD CD 00    	        CALL  WRLCD
+0074   006D 08          		EX    AF,AF'
+0075   006E D9          		EXX
+0076   006F ED 45       		RETN
+0077   0071             
+0078   0071             				
+0079   0071             ;Rutina para programar el PPI		
+0080   0071 31 FF 67    PGRMPPI:	LD    SP,67FFh  ;Inicializamos el Stack Pointer
+0081   0074 3E 90       		LD    A,090h    ;Se carga la palabra de control para el PPI
+0082   0076 D3 03       		OUT   (03h),A	;Se programa el PPI
+0083   0078 3E 00       		LD    A,00h	;Se incializa el contador de caracteres a 0
+0084   007A 32 00 60    		LD    (chars),A
+0085   007D             		
+0086   007D             
+0087   007D             	
+0088   007D             ;Subrutina para programar el LCD
+0089   007D 3E 38       PGRMLCD:	LD    A,38H
+0090   007F D3 01       		OUT   (01H),A
+0091   0081 CD E0 00    		CALL  CONTROL1
+0092   0084 3E 06       		LD    A,06H
+0093   0086 D3 01       		OUT   (01H),A
+0094   0088 CD E0 00    		CALL  CONTROL1
+0095   008B 3E 0F       		LD    A,0FH
+0096   008D D3 01       		OUT   (01H),A
+0097   008F CD E0 00    		CALL  CONTROL1		
+0098   0092 3E 80       		LD    A,80H
+0099   0094 D3 01       		OUT   (01H),A
+0100   0096 CD E0 00    		CALL  CONTROL1
+0101   0099 3E 01       		LD    A,01H
+0102   009B D3 01       		OUT   (01H),A
+0103   009D CD E0 00    		CALL  CONTROL1	
+0104   00A0 C3 A3 00    		JP    INICIO
+0105   00A3             		
+0106   00A3             		
+0107   00A3             ;PROGRAMA PRINCIPAL		
+0108   00A3 DB 00       INICIO:		IN    A,(00h)
+0109   00A5 CB 5F       		BIT   3,A
+0110   00A7 C4 AE 00    		CALL  NZ,ENVIATECLA
+0111   00AA C3 A3 00    		JP    INICIO
+0112   00AD 76          		HALT
+0113   00AE             ;PROGRAMA PRINCIPAL
+0114   00AE             		
+0115   00AE 5F          ENVIATECLA:	LD    E,A		
+0116   00AF DB 00       SOLTAR:		IN    A,(00h)
+0117   00B1 CB 5F       		BIT   3,A
+0118   00B3 C2 AF 00    		JP    NZ,SOLTAR
+0119   00B6 7B          		LD    A,E
+0120   00B7 E6 F0       		AND   0F0h
+0121   00B9 CB 3F       		SRL   A
+0122   00BB CB 3F       		SRL   A
+0123   00BD CB 3F       		SRL   A
+0124   00BF CB 3F       		SRL   A
+0125   00C1 21 1C 01    		LD    HL,TABLALCD
+0126   00C4 5F          		LD    E,A
+0127   00C5 16 00       		LD    D,0
+0128   00C7 19          		ADD   HL,DE
+0129   00C8 7E          		LD    A,(HL)
+0130   00C9 CD D3 00    		CALL  WRUART
+0131   00CC C9          		RET
+0132   00CD             
+0133   00CD             		
+0134   00CD             		
+0135   00CD             ;Subrutina que escribe un caracter en en LCD
+0136   00CD             ;el caracter esta contenido en la localidad
+0137   00CD             ;de memoria apuntada por HL.
+0138   00CD D3 01       WRLCD:		OUT   (01h),A
+0139   00CF CD F6 00    		CALL  CONTROL2		
+0140   00D2 C9          		RET	
+0141   00D3             ;Subrturina que envia un dato a la uart para enviarlo
+0142   00D3             ;por el puerto serie
+0143   00D3 D3 A0       WRUART:		OUT   (0A0h),A
+0144   00D5 C9          		RET
+0145   00D6             
+0146   00D6             ;Subrutina que regresa el cursor a la primera posicion
+0147   00D6             ;del renglon 1.
+0148   00D6 3E 80       REINICIALINEA:	LD    A,80H
+0149   00D8 D3 01       		OUT   (01H),A
+0150   00DA CD E0 00    		CALL  CONTROL1
+0151   00DD 3E 00       		LD    A,0		
+0152   00DF C9          		RET
+0153   00E0             
+0154   00E0             ;Subrutina que activa las señales para escribir una
+0155   00E0             ;palabra de control en el LCD		
+0156   00E0 3E 00       CONTROL1:	LD	A,00h
+0157   00E2 D3 02       		OUT	(02h),A
+0158   00E4 CD 0C 01    		CALL	ESPERA
+0159   00E7 3E 04       		LD	A,04h
+0160   00E9 D3 02       		OUT	(02h),A
+0161   00EB CD 0C 01    		CALL	ESPERA
+0162   00EE 3E 00       		LD	A,00h
+0163   00F0 D3 02       		OUT	(02h),A
+0164   00F2 CD 0C 01    		CALL	ESPERA
+0165   00F5 C9          		RET
+0166   00F6             		
+0167   00F6             ;Subrutina que activa las señales para escribir
+0168   00F6             ;un caracter en el LCD
+0169   00F6 3E 02       CONTROL2:	LD	A,02h
+0170   00F8 D3 02       		OUT	(02h),A
+0171   00FA CD 0C 01    		CALL	ESPERA
+0172   00FD 3E 06       		LD	A,06h
+0173   00FF D3 02       		OUT	(02h),A
+0174   0101 CD 0C 01    		CALL	ESPERA
+0175   0104 3E 02       		LD	A,02h
+0176   0106 D3 02       		OUT	(02h),A
+0177   0108 CD 0C 01    		CALL	ESPERA
+0178   010B C9          		RET
+0179   010C             
+0180   010C             ;Subrutina que demora 2ms, para escribir palabras de 
+0181   010C             ;control y caracteres en el LCD
+0182   010C 16 02       ESPERA: 	LD   D,02H		
+0183   010E 01 67 00    CICLO:		LD  BC,0067h	;cargamos BC con 0067h, para demorar 1ms
+0184   0111 0B          CICLO2:		DEC BC		;decrementamos BC
+0185   0112 79          		LD  A,C		;cargamos C en A para para compara si BC es 0
+0186   0113 B0          		OR  B		;comparamos a con B
+0187   0114 C2 11 01    		JP  NZ,CICLO2	;si no es cero, saltamos a ciclo 2;
+0188   0117 15          		DEC D		;decrementamos D (contador de milisegundos)
+0189   0118 C2 0E 01    		JP  NZ,CICLO	;si no es cero, saltamos a ciclo1
+0190   011B C9          		RET		;retorno de la subrutina.
+0191   011C             		
+0192   011C             		
+0193   011C             ;Tabla con los caracteres que se mostraran en el LCD
+0194   011C             ;dependiendo de la tecla que se haya presionado
+0195   011C             TABLALCD:	
+0196   011C 31          		DEFB   "1"  ;1
+0197   011D 32          		DEFB   "2"  ;2
+0198   011E 33          		DEFB   "3"  ;3
+0199   011F 41          		DEFB   "A"  ;A
+0200   0120 34          		DEFB   "4"  ;4
+0201   0121 35          		DEFB   "5"  ;5
+0202   0122 36          		DEFB   "6"  ;6
+0203   0123 42          		DEFB   "B"  ;B
+0204   0124 37          		DEFB   "7"  ;7
+0205   0125 38          		DEFB   "8"  ;8
+0206   0126 39          		DEFB   "9"  ;9
+0207   0127 43          		DEFB   "C"  ;C	
+0208   0128 2A          		DEFB   "*"  ;*
+0209   0129 30          		DEFB   "0"  ;0
+0210   012A 23          		DEFB   "#"  ;#			
+0211   012B 44          		DEFB   "D"  ;D
+0212   012C 2D          		DEFB   "-"  ;guion	
+0213   012D             		END		
+Number of errors = 0

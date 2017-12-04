@@ -1,0 +1,31 @@
+0001   0000             
+0002   0000             	.ORG 00000H
+0003   0000 31 FF FF    	LD	 SP,0FFFFh	;carga el SP con la direccion más alta de la RAM
+0004   0003 16 0F       	LD	 D,00fH		;carga el numero de ms en D
+0005   0005 CD 09 00    	CALL RETARDO_MS ;llama a la subrutina RETARDO_MS
+0006   0008 76          	HALT	        ;modo halt
+0007   0009             
+0008   0009             
+0009   0009             RETARDO_MS:
+0010   0009 42          	LD	B,D		;carga el numero de milisegundos en B
+0011   000A             CICLO_R:
+0012   000A CD 10 00    	CALL DELAY_1MS	;llama a la subrutina DELAY_1MS
+0013   000D 10 FB       	DJNZ CICLO_R	;decrementa B y si no es cero, salta a la etiqueta CICLO_R
+0014   000F C9          	RET
+0015   0010             
+0016   0010             
+0017   0010             ;Subrutina que demora aprox 1ms con una frecuencia de 8 MHZ
+0018   0010             DELAY_1MS:
+0019   0010 D9          	EXX				;guarda los registros en los pares complementarios
+0020   0011 08          	EX	AF,AF'		;guarda los registros A y F
+0021   0012 01 4B 01    	LD	BC,0014Bh	;carga BC con 0067h, para demorar 1ms a 8 MHZ
+0022   0015             CICLO_D:	
+0023   0015 0B          	DEC BC		 ;decrementa BC
+0024   0016 79          	LD  A,C		 ;carga C en A para para compara si BC es 0
+0025   0017 B0          	OR  B		 ;compara A con B
+0026   0018 C2 15 00    	JP  NZ,CICLO_D	;si no es cero, saltaa CICLO_D;
+0027   001B 08          	EX	AF,AF'	 ;restaura los registros A y F
+0028   001C D9          	EXX			 ;restaura todos los registros guardados en
+0029   001D             				 ;los registros complementarios.
+0030   001D C9          	RET
+Number of errors = 0

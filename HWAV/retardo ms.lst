@@ -1,0 +1,30 @@
+0001   0000             
+0002   0000             	.ORG 00000H
+0003   0000             	
+0004   0000 16 FF       	LD D,0FFH
+0005   0002 CD 06 00    	CALL RETARDO
+0006   0005 76          	HALT
+0007   0006             
+0008   0006             
+0009   0006             RETARDO:
+0010   0006 42          	LD	B,D
+0011   0007             CICLO_R:
+0012   0007 CD 0D 00    	CALL	DELAY_1MS
+0013   000A 10 FB       	DJNZ	CICLO_R
+0014   000C C9          	RET
+0015   000D             
+0016   000D             DELAY_1MS:
+0017   000D             ;Subrutina que demora aprox 1ms con una frecuencia de 8 MHZ
+0018   000D D9          	EXX
+0019   000E 08          	EX	AF,AF'
+0020   000F 01 4B 01    	LD	BC,0014Bh	;carga BC con 0067h, para demorar 1ms a 8 MHZ
+0021   0012             CICLO_D:	
+0022   0012 0B          	DEC BC		;decrementa BC
+0023   0013 79          	LD  A,C		;carga C en A para para compara si BC es 0
+0024   0014 B0          	OR  B		;compara A con B
+0025   0015 C2 12 00    	JP  NZ,CICLO_D	;si no es cero, saltamos a ciclo 2;
+0026   0018 08          	EX	AF,AF'	;restaura los registros A y F
+0027   0019 D9          	EXX			;restaura todos los registros guardados en
+0028   001A             				;los registros complementarios.
+0029   001A C9          	RET			;regreso de la subrutina.
+Number of errors = 0

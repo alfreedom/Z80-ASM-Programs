@@ -1,0 +1,34 @@
+0001   0000             ;Incrementa un numero de 32 bits
+0002   0000             VAR1	.EQU	0f0h
+0003   0000             VAR2	.equ	014h
+0004   0000 C3 70 00    	JP	Inicio
+0005   0003             	
+0006   0003             	ORG	0066h
+0007   0066 ED 4D       	RETI
+0008   0068             	
+0009   0068             	org	070h
+0010   0070 21 F0 00    Inicio:	LD	HL,VAR1
+0011   0073 CD 7E 00    	CALL	INC24
+0012   0076 C3 93 00    	JP	FIN
+0013   0079             
+0014   0079             
+0015   0079 06 02       INC16:	LD	b,2
+0016   007B C3 88 00    	JP	_inc
+0017   007E 06 03       INC24:	LD	b,3
+0018   0080 C3 88 00    	JP	_inc
+0019   0083 06 04       INC32:	LD	b,4
+0020   0085 C3 88 00    	JP	_inc
+0021   0088 3E FF       _inc	LD	A,0FFh
+0022   008A 3C          	INC	A	
+0023   008B 7E          CICLO:	LD	A,(HL)
+0024   008C CE 00       	ADC	A,0
+0025   008E 77          	LD	(HL),A
+0026   008F 23          	INC	HL
+0027   0090 10 F9       	DJNZ	CICLO
+0028   0092 C9          	ret
+0029   0093             	
+0030   0093 76          FIN:	HALT
+0031   0094 76          	HALT
+0032   0095             	
+0033   0095             	
+Number of errors = 0

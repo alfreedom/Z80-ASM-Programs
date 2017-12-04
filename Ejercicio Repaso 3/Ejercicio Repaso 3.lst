@@ -1,0 +1,75 @@
+0001   0000             ;Programa que simula un cronometro que
+0002   0000             ;cuenta en decimas de segundo, al inicio
+0003   0000             ;muestra ceros y el conteo comienza cuando
+0004   0000             ;se presione el push button conectado al
+0005   0000             ;PA0 (bit 0 del PA del PPI), y termina de
+0006   0000             ;contar cuando se presione el push button
+0007   0000             ;conectado al PA1 (bit 1 del PA del PPI).
+0008   0000             ;
+0009   0000             ;El retardo de conteo se hace mediante una
+0010   0000             ;subrutina de delay, la cual demora los
+0011   0000             ;milisegundos definidos en el registro C,
+0012   0000             ;cada 100 milisegundos se incrementa un
+0013   0000             ;contador de 16 bits, al presionar el boton
+0014   0000             ;de parada, el conteo se guarda en memoria,
+0015   0000             ;y la variable de conteo se reinicia a 0.
+0016   0000             
+0017   0000             
+0018   0000             	TIEMPO .EQU	6800H
+0019   0000             
+0020   0000             	ORG	0000h
+0021   0000 31 FF 67    	LD	SP,67FFH;
+0022   0003 3E 90       	LD	A,90h		;SE PROGRAMA EL PPI
+0023   0005 D3 03       	OUT	(03H),A		
+0024   0007             		
+0025   0007 DB 00       INICIO:	IN	A,(00H)
+0026   0009 CB 47       	BIT	0,A
+0027   000B CA 07 00    	JP	Z,INICIO
+0028   000E 16 19       	LD	D,25
+0029   0010 CD 4A 00    	CALL	Delay_ms
+0030   0013 DB 00       SUELTAI: IN	A,(00H)
+0031   0015 CB 47       	BIT	0,A
+0032   0017 C2 13 00    	JP	NZ,SUELTAI
+0033   001A 16 19       	LD	D,25
+0034   001C CD 4A 00    	CALL	Delay_ms
+0035   001F 21 00 00    	LD	HL,0000H
+0036   0022 CD 28 00    	CALL 	CUENTA
+0037   0025 C3 07 00    	JP	INICIO
+0038   0028             	
+0039   0028 23          CUENTA: INC	HL
+0040   0029 16 64       	LD	D,100
+0041   002B CD 4A 00    	CALL	Delay_ms
+0042   002E DB 00       	IN	A,(00H)
+0043   0030 CB 4F       	BIT	1,A
+0044   0032 CA 28 00    	JP	Z,CUENTA
+0045   0035 16 19       	LD	D,25
+0046   0037 CD 4A 00    	CALL	Delay_ms
+0047   003A DB 00       SUELTAF: IN	A,(00H)
+0048   003C CB 47       	BIT	0,A
+0049   003E C2 3A 00    	JP	NZ,SUELTAF
+0050   0041 16 19       	LD	D,25
+0051   0043 CD 4A 00    	CALL	Delay_ms
+0052   0046 22 00 68    	LD	(TIEMPO),HL
+0053   0049 C9          	RET
+0054   004A             	
+0055   004A             ;*************************RUTINA DE DELAY************************************
+0056   004A D5          Delay_ms: PUSH DE 	;guardamos el par de reigstros DE en la pila
+0057   004B D9          	EXX		;Respaldamos todos los registros, en los
+0058   004C             			;registros complementarios.	
+0059   004C 08          	EX  AF,AF'	;guardamos el registro A y el registro de banderas
+0060   004D             			;en los registros A' y F'.
+0061   004D D1          	POP DE		;restauramos los registros DE, sacandolo de la pila
+0062   004E 01 67 00    CICLO:	LD  BC,0067h	;cargamos BC con 0067h, para demorar 1ms
+0063   0051 0B          CICLO2:	DEC BC		;decrementamos BC
+0064   0052 79          	LD  A,C		;cargamos C en A para para compara si BC es 0
+0065   0053 B0          	OR  B		;comparamos a con B
+0066   0054 C2 51 00    	JP  NZ,CICLO2	;si no es cero, saltamos a ciclo 2;
+0067   0057 15          	DEC D		;decrementamos D (contador de milisegundos)
+0068   0058 C2 4E 00    	JP  NZ,CICLO	;si no es cero, saltamos a ciclo1
+0069   005B 08          	EX  AF,AF'	;restauramos el acumulador y el registro de
+0070   005C             			;banderas
+0071   005C D9          	EXX		;restauramos todos los registros guardados en
+0072   005D             			;los registros complementariso.
+0073   005D C9          	RET	
+0074   005E 76          	HALT
+Number of errors = 0
